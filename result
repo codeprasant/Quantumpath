@@ -1,0 +1,26 @@
+{
+  "Classical CNN": {
+    "accuracy": 0.673,
+    "auc": 0.711,
+    "sensitivity": 0.619,
+    "seconds": 2.8
+  },
+  "QSVC": {
+    "accuracy": 0.731,
+    "auc": 0.349,
+    "sensitivity": 0,
+    "seconds": 202.4
+  },
+  "VQC": {
+    "accuracy": 0.75,
+    "auc": 0.82,
+    "sensitivity": 0.738,
+    "seconds": 9.6
+  },
+  "QCNN": {
+    "accuracy": 0.756,
+    "auc": 0.794,
+    "sensitivity": 0.69,
+    "seconds": 10
+  }
+}
