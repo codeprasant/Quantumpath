@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>QuantumPath: hybrid quantum vision for cancer diagnostics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fbf6f7;--surface:#fff;--ink:#231b3a;--muted:#5d5575;--hema:#4b3a8c;--eosin:#f3d3dc;--line:#e4d5dc;--q:#17808f;--btn-ink:#fff;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17122b;--surface:#211a3a;--ink:#f4eaf0;--muted:#b5accb;--hema:#a493ef;--eosin:#4a2c46;--line:#3a3057;--q:#4cc3d4;--btn-ink:#17122b}}
+:root[data-theme="dark"]{--bg:#17122b;--surface:#211a3a;--ink:#f4eaf0;--muted:#b5accb;--hema:#a493ef;--eosin:#4a2c46;--line:#3a3057;--q:#4cc3d4;--btn-ink:#17122b}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.6 "IBM Plex Sans",system-ui,sans-serif}
+h1,h2,h3{font-family:"Bricolage Grotesque","Segoe UI",sans-serif;line-height:1.1;margin:0 0 .5em}
+h1{font-size:clamp(2.4rem,7vw,4.6rem);font-weight:800;letter-spacing:-.02em}
+h2{font-size:clamp(1.6rem,4vw,2.3rem);font-weight:700}
+h3{font-size:1.15rem;font-weight:700}
+p{max-width:68ch;margin:0 0 1em}
+.wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+section{padding:56px 0;border-top:1px solid var(--line)}
+.hero{border:0;padding:64px 0 40px;display:grid;gap:32px}
+.hero p.lead{font-size:1.15rem;color:var(--muted)}
+.slide{background:linear-gradient(135deg,var(--eosin),transparent 70%);border:1px solid var(--line);border-radius:6px;padding:16px}
+.grid8{display:grid;grid-template-columns:repeat(8,1fr);gap:3px;max-width:360px;margin:0 auto}
+.grid8 button{aspect-ratio:1;border:0;border-radius:2px;cursor:pointer;padding:0}
+.grid8 button:focus-visible,.tab:focus-visible,.go:focus-visible{outline:3px solid var(--q);outline-offset:2px}
+.grid8 button[aria-pressed="true"]{outline:3px solid var(--ink)}
+.row{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.tab,.go{font:500 .95rem "IBM Plex Sans",sans-serif;border:1px solid var(--hema);background:transparent;color:var(--hema);padding:8px 14px;border-radius:4px;cursor:pointer}
+.tab[aria-selected="true"],.go{background:var(--hema);color:var(--btn-ink)}
+.result{margin-top:12px;font-size:.95rem}
+.bar{height:10px;background:var(--line);border-radius:5px;overflow:hidden;margin:6px 0}
+.bar i{display:block;height:100%;background:var(--q);width:0;transition:width .5s}
+.note{font-size:.85rem;color:var(--muted)}
+.scroll{overflow-x:auto}
+.scroll svg{min-width:640px;width:100%;height:auto}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:20px}
+.two{display:grid;gap:20px}
+.three{display:grid;gap:16px}
+@media(min-width:760px){.hero{grid-template-columns:1.2fr 1fr;align-items:center}.two{grid-template-columns:1fr 1fr}.three{grid-template-columns:repeat(3,1fr)}}
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+code{background:var(--eosin);padding:1px 5px;border-radius:3px;font-size:.9em}
+ol.steps{padding-left:1.2em}ol.steps li{margin-bottom:.6em}
+footer{padding:32px 0;border-top:1px solid var(--line);color:var(--muted);font-size:.85rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="hero">
+  <div>
+    <h1>Quantum circuits that help read the slide.</h1>
+    <p class="lead">QuantumPath is a hybrid pipeline for oncology imaging. A classical CNN reads histopathology patches and CT slices; a small quantum layer makes the final call on a compact set of features.</p>
+    <p class="note">Hackathon Track 8: Quantum AI for Healthcare and Biomedical Diagnostics. Research prototype, not a medical device.</p>
+  </div>
+  <div class="slide" aria-label="Interactive demo">
+    <p style="margin-bottom:8px"><b>Try it:</b> pick a patch from this simulated H&amp;E slide.</p>
+    <div class="grid8" id="grid"></div>
+    <div class="row"><button class="go" id="run">Classify patch</button></div>
+    <div class="result" id="out" aria-live="polite">No patch selected.</div>
+    <p class="note">Output is simulated to show the UI. Replace with your trained model's API.</p>
+  </div>
+</header>
+
+<section id="pipeline">
+  <h2>How the hybrid pipeline works</h2>
+  <p>Today's quantum computers have few, noisy qubits, so we never feed a whole image into them. The CNN does the heavy lifting and the quantum part sees only a short feature vector.</p>
+  <div class="scroll"><svg viewBox="0 0 880 150" role="img" aria-label="Pipeline: image, CNN encoder, reduce to 4-8 features, angle encoding, quantum circuit, measurement, classifier output">
+    <g font-family="IBM Plex Sans,sans-serif" font-size="14" fill="currentColor" stroke="currentColor">
+      <rect x="4" y="40" width="110" height="60" rx="6" fill="none"/><text x="59" y="75" text-anchor="middle" stroke="none">Image patch</text>
+      <rect x="150" y="40" width="120" height="60" rx="6" fill="none"/><text x="210" y="68" text-anchor="middle" stroke="none">CNN encoder</text><text x="210" y="86" text-anchor="middle" stroke="none" font-size="11">frozen or tuned</text>
+      <rect x="306" y="40" width="120" height="60" rx="6" fill="none"/><text x="366" y="68" text-anchor="middle" stroke="none">Reduce</text><text x="366" y="86" text-anchor="middle" stroke="none" font-size="11">4 to 8 features</text>
+      <rect x="462" y="30" width="190" height="80" rx="6" fill="var(--eosin)"/><text x="557" y="64" text-anchor="middle" stroke="none" font-weight="700">Quantum layer</text><text x="557" y="84" text-anchor="middle" stroke="none" font-size="11">encode, entangle, measure</text>
+      <rect x="688" y="40" width="120" height="60" rx="6" fill="none"/><text x="748" y="75" text-anchor="middle" stroke="none">Benign / malignant</text>
+      <path d="M114 70h36M270 70h36M426 70h36M652 70h36" fill="none"/>
+    </g></svg></div>
+  <p class="note">Why bother? Quantum feature maps can separate some small, high-dimensional datasets that are hard to separate classically, which matters in medicine where labelled scans are scarce. Whether it beats a good classical baseline is exactly what your benchmark should test.</p>
+</section>
+
+<section id="models">
+  <h2>The three quantum models</h2>
+  <div class="row" role="tablist" id="tabs">
+    <button class="tab" role="tab" aria-selected="true" data-k="qcnn">QCNN</button>
+    <button class="tab" role="tab" aria-selected="false" data-k="qsvc">QSVC</button>
+    <button class="tab" role="tab" aria-selected="false" data-k="vqc">VQC</button>
+  </div>
+  <div class="panel" id="model"></div>
+</section>
+
+<section id="clinical">
+  <h2>Where it applies</h2>
+  <div class="three">
+    <div class="panel"><h3>Histopathology</h3><p>Classify tissue patches as tumor or normal, or grade them. Whole slides are huge, so tile into patches and aggregate predictions.</p><p class="note">Data: PatchCamelyon, LC25000, BreakHis</p></div>
+    <div class="panel"><h3>CT scans</h3><p>Flag suspicious lung nodules as benign or malignant from cropped 2D or 3D regions around each candidate.</p><p class="note">Data: LIDC-IDRI, MedMNIST NoduleMNIST3D</p></div>
+    <div class="panel"><h3>Oncology triage</h3><p>Combine image features with tabular markers to prioritise cases for a specialist's review queue.</p><p class="note">Data: Wisconsin Breast Cancer, TCGA subsets</p></div>
+  </div>
+</section>
+
+<section id="build">
+  <h2>Build plan for the hackathon</h2>
+  <div class="two">
+    <div>
+      <ol class="steps">
+        <li><b>Pick one dataset.</b> MedMNIST (PathMNIST or BreastMNIST) is tiny and loads in one line.</li>
+        <li><b>Train a classical baseline.</b> A small CNN or ResNet18 gives you the number to beat.</li>
+        <li><b>Extract and compress features.</b> Use PCA or a linear layer to get 4 to 8 values.</li>
+        <li><b>Add quantum models.</b> Run QSVC, VQC and a QCNN on a simulator over the same features.</li>
+        <li><b>Compare honestly.</b> Report accuracy, AUC, sensitivity, training time and sample efficiency.</li>
+        <li><b>Wrap in this site.</b> Serve predictions from a small FastAPI endpoint.</li>
+      </ol>
+    </div>
+    <div class="scroll"><table>
+      <tr><th>Layer</th><th>Tools</th></tr>
+      <tr><td>Imaging</td><td>PyTorch, torchvision, MedMNIST</td></tr>
+      <tr><td>Quantum</td><td>PennyLane (<code>default.qubit</code>), Qiskit Machine Learning</td></tr>
+      <tr><td>Hybrid training</td><td>PennyLane <code>qml.qnn.TorchLayer</code></td></tr>
+      <tr><td>Explainability</td><td>Grad-CAM on the CNN encoder</td></tr>
+      <tr><td>Serving</td><td>FastAPI, this static front end</td></tr>
+      <tr><td>Hardware (optional)</td><td>IBM Quantum or other cloud QPU, after simulator results</td></tr>
+    </table></div>
+  </div>
+</section>
+
+<section id="results">
+  <h2>Results dashboard</h2>
+  <p>Load the <code>results.json</code> that <code>quantum_diagnostics.py</code> writes. On GitHub Pages it loads automatically when the file sits next to this page.</p>
+  <div class="row"><input type="file" id="file" accept=".json" aria-label="Load results.json"><button class="go" id="demo">Show placeholder data</button></div>
+  <div class="row" id="mtabs">
+    <button class="tab" aria-selected="true" data-m="accuracy">Accuracy</button>
+    <button class="tab" aria-selected="false" data-m="auc">AUC</button>
+    <button class="tab" aria-selected="false" data-m="sensitivity">Sensitivity</button>
+    <button class="tab" aria-selected="false" data-m="seconds">Seconds</button>
+  </div>
+  <div class="panel" id="chart"><p class="note">No results loaded yet.</p></div>
+  <p id="verdict" aria-live="polite"></p>
+  <p class="note" id="src"></p>
+  <h3>Explainability</h3>
+  <p>The script also saves <code>gradcam.png</code>, which shows the image regions the CNN encoder relied on. Add it to the repo and show it next to the numbers so judges can see what drives each prediction.</p>
+</section>
+
+<section id="honest">
+  <h2>Limits to state up front</h2>
+  <p>Judges respond well to candour. Simulated qubits scale badly past about 20 to 25, real hardware adds noise, and gains over classical models on small data are often modest or absent. Medical use needs clinical validation, bias checks across patient groups, and regulatory approval. Present the system as decision support that a clinician reviews.</p>
+</section>
+<footer>QuantumPath prototype. For research and education only. Not for clinical use.</footer>
+</div>
+
+<script>
+var M={
+qcnn:{t:"Quantum Convolutional Neural Network",d:"Mimics a CNN with qubits. Convolution layers apply small entangling gates to neighbouring qubits; pooling layers measure and drop half of them. After a few rounds one qubit remains and gives the class.",use:"Best fit for histopathology textures and CT patches, where local structure matters.",pro:"Very few parameters and resistant to barren plateaus.",con:"Needs a clean encoding of image features into 8 or more qubits.",code:"qml.AngleEmbedding(x, wires) then conv + pool unitaries, measure last wire"},
+qsvc:{t:"Quantum Support Vector Classifier",d:"Maps each sample into a quantum feature space and computes a kernel, meaning the overlap between two encoded states. A classical SVM then uses that kernel matrix to find the decision boundary. No circuit training is needed.",use:"Best for small labelled sets, such as rare tumor subtypes, and a strong first experiment.",pro:"Simple, stable, no gradient training.",con:"Kernel matrix grows with the square of sample count, so it is costly on big data.",code:"FidelityQuantumKernel(feature_map=ZZFeatureMap(4)) + SVC(kernel='precomputed')"},
+vqc:{t:"Variational Quantum Classifier",d:"A parameterised circuit whose rotation angles are trained by a classical optimiser. Features are encoded, trainable layers entangle the qubits, and a measurement gives the class probability.",use:"Best as the quantum head on top of a CNN, trained end to end with backpropagation.",pro:"Flexible and plugs directly into PyTorch.",con:"Training can stall on flat loss landscapes and is sensitive to noise.",code:"qml.StronglyEntanglingLayers(weights, wires) inside a TorchLayer"}};
+function show(k){var m=M[k];document.getElementById("model").innerHTML="<h3>"+m.t+"</h3><p>"+m.d+"</p><p><b>Use it for:</b> "+m.use+"</p><p><b>Strength:</b> "+m.pro+" <b>Watch out:</b> "+m.con+"</p><p class='note'>Sketch: <code>"+m.code+"</code></p>"}
+var tabs=document.querySelectorAll(".tab");
+tabs.forEach(function(b){b.addEventListener("click",function(){tabs.forEach(function(x){x.setAttribute("aria-selected","false")});b.setAttribute("aria-selected","true");show(b.dataset.k)})});
+show("qcnn");
+var g=document.getElementById("grid"),sel=null,cells=[];
+for(var i=0;i<64;i++){var b=document.createElement("button"),r=(i*37%11),dense=(i%8>3&&Math.floor(i/8)>2&&Math.floor(i/8)<7);
+b.dataset.t=dense?1:0;b.setAttribute("aria-label","Patch "+(i+1));b.setAttribute("aria-pressed","false");
+var h=dense?270+r*2:330+r;b.style.background="hsl("+h+","+(dense?45:50)+"%,"+(dense?38+r:78-r)+"%)";
+b.addEventListener("click",function(){if(sel)sel.setAttribute("aria-pressed","false");sel=this;this.setAttribute("aria-pressed","true")});g.appendChild(b)}
+document.getElementById("run").addEventListener("click",function(){var o=document.getElementById("out");
+if(!sel){o.textContent="Select a patch first.";return}
+var t=sel.dataset.t==="1",p=t?0.78+Math.random()*0.18:0.05+Math.random()*0.15,pc=Math.round(p*100);
+o.innerHTML="<b>"+(t?"Suspicious: tumor-like tissue":"Likely normal tissue")+"</b> ("+pc+"% tumor probability)<div class='bar'><i style='width:0'></i></div>Review by a pathologist required.";
+setTimeout(function(){o.querySelector("i").style.width=pc+"%"},30)});
+var R=null,metric="accuracy";
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return "&#"+c.charCodeAt(0)+";"})}
+function draw(){var c=document.getElementById("chart");
+if(!R){c.innerHTML="<p class='note'>No results loaded yet.</p>";return}
+var n=Object.keys(R),mx=metric==="seconds"?Math.max.apply(null,n.map(function(k){return R[k][metric]||0}))||1:1;
+c.innerHTML=n.map(function(k){var v=R[k][metric]||0;
+return "<div style='margin:10px 0'><div style='display:flex;justify-content:space-between'><b>"+esc(k)+"</b><span>"+esc(v)+"</span></div><div class='bar'><i style='width:"+(v/mx*100)+"%;background:"+(k.indexOf("Classical")===0?"var(--hema)":"var(--q)")+"'></i></div></div>"}).join("");
+var b=R["Classical CNN"],best=null;
+n.forEach(function(k){if(k!==n[0]&&k!=="Classical CNN"&&(!best||R[k].auc>R[best].auc))best=k});
+var v=document.getElementById("verdict");
+v.textContent=(b&&best)?(R[best].auc>b.auc?"Best quantum model ("+best+") beats the classical AUC by "+(R[best].auc-b.auc).toFixed(3)+". Check it holds across seeds before claiming a win.":"No quantum model beat the classical baseline on AUC in this run. That is a valid, reportable result."):""}
+function load(d,label){R=d;document.getElementById("src").textContent=label;draw()}
+document.getElementById("mtabs").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;
+document.querySelectorAll("#mtabs button").forEach(function(x){x.setAttribute("aria-selected","false")});
+b.setAttribute("aria-selected","true");metric=b.dataset.m;draw()});
+document.getElementById("file").addEventListener("change",function(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();
+r.onload=function(){try{load(JSON.parse(r.result),"Loaded from "+f.name)}catch(x){document.getElementById("src").textContent="That file is not valid JSON."}};r.readAsText(f)});
+document.getElementById("demo").addEventListener("click",function(){load({"Classical CNN":{accuracy:0.80,auc:0.85,sensitivity:0.75,seconds:20},"QSVC":{accuracy:0.78,auc:0.83,sensitivity:0.72,seconds:240},"VQC":{accuracy:0.79,auc:0.84,sensitivity:0.74,seconds:600},"QCNN":{accuracy:0.78,auc:0.84,sensitivity:0.73,seconds:520}},"Placeholder numbers for layout only. Not real results.")});
+try{fetch("results.json").then(function(r){if(r.ok)return r.json();throw 0}).then(function(d){load(d,"Loaded results.json")}).catch(function(){})}catch(x){}
+</script>
+</body>
+</html>
