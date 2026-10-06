@@ -1,0 +1,6 @@
+torch
+pennylane>=0.35
+medmnist
+scikit-learn
+numpy
+matplotlib
